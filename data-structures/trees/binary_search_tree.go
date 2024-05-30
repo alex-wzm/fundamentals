@@ -30,11 +30,10 @@ func (n *Node) insert(v int) {
 	if v < n.value {
 		if n.left != nil {
 			n.left.insert(v)
-			return
 		} else {
 			n.left = &Node{value: v}
-			return
 		}
+		return
 	}
 
 	if v > n.value {
