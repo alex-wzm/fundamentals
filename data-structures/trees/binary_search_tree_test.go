@@ -15,7 +15,7 @@ func TestInsert(t *testing.T) {
 		"inserts to empty tree": {
 			setup:    NewBinaryTree,
 			input:    10,
-			expected: &BinaryTree{root: &Node{value: 10}},
+			expected: &BinaryTree{root: &node{value: 10, height: 1}},
 		},
 		"inserts smaller element": {
 			setup: func() *BinaryTree {
@@ -26,7 +26,7 @@ func TestInsert(t *testing.T) {
 				return tree
 			},
 			input:    1,
-			expected: &BinaryTree{root: &Node{value: 10, left: &Node{value: 5, left: &Node{value: 1}}}},
+			expected: &BinaryTree{root: &node{value: 10, height: 3, left: &node{value: 5, height: 2, left: &node{value: 1, height: 1}}}},
 		},
 		"inserts larger element": {
 			setup: func() *BinaryTree {
@@ -37,7 +37,7 @@ func TestInsert(t *testing.T) {
 				return tree
 			},
 			input:    20,
-			expected: &BinaryTree{root: &Node{value: 10, right: &Node{value: 15, right: &Node{value: 20}}}},
+			expected: &BinaryTree{root: &node{value: 10, height: 3, right: &node{value: 15, height: 2, right: &node{value: 20, height: 1}}}},
 		},
 		"insert duplicate element": {
 			setup: func() *BinaryTree {
@@ -47,7 +47,7 @@ func TestInsert(t *testing.T) {
 				return tree
 			},
 			input:    10,
-			expected: &BinaryTree{root: &Node{value: 10}},
+			expected: &BinaryTree{root: &node{value: 10, height: 1}},
 		},
 	}
 
@@ -157,7 +157,7 @@ func TestDelete(t *testing.T) {
 				return tree
 			},
 			input:    5,
-			expected: &BinaryTree{root: &Node{value: 10, right: &Node{value: 15}}},
+			expected: &BinaryTree{root: &node{value: 10, height: 2, right: &node{value: 15, height: 1}}},
 		},
 		"deletes right leaf": {
 			setup: func() *BinaryTree {
@@ -169,7 +169,7 @@ func TestDelete(t *testing.T) {
 				return tree
 			},
 			input:    15,
-			expected: &BinaryTree{root: &Node{value: 10, left: &Node{value: 5}}},
+			expected: &BinaryTree{root: &node{value: 10, height: 2, left: &node{value: 5, height: 1}}},
 		},
 		"deletes non-leaf element": {
 			setup: func() *BinaryTree {
@@ -183,7 +183,7 @@ func TestDelete(t *testing.T) {
 				return tree
 			},
 			input:    15,
-			expected: &BinaryTree{root: &Node{value: 10, left: &Node{value: 5}, right: &Node{value: 12, right: &Node{value: 17}}}},
+			expected: &BinaryTree{root: &node{value: 10, height: 3, left: &node{value: 5, height: 1}, right: &node{value: 12, height: 2, right: &node{value: 17, height: 1}}}},
 		},
 		"deletes element with left child only": {
 			setup: func() *BinaryTree {
@@ -196,7 +196,7 @@ func TestDelete(t *testing.T) {
 				return tree
 			},
 			input:    15,
-			expected: &BinaryTree{root: &Node{value: 10, left: &Node{value: 5}, right: &Node{value: 12}}},
+			expected: &BinaryTree{root: &node{value: 10, height: 2, left: &node{value: 5, height: 1}, right: &node{value: 12, height: 1}}},
 		},
 		"deletes element with right child only": {
 			setup: func() *BinaryTree {
@@ -209,7 +209,7 @@ func TestDelete(t *testing.T) {
 				return tree
 			},
 			input:    15,
-			expected: &BinaryTree{root: &Node{value: 10, left: &Node{value: 5}, right: &Node{value: 17}}},
+			expected: &BinaryTree{root: &node{value: 10, height: 2, left: &node{value: 5, height: 1}, right: &node{value: 17, height: 1}}},
 		},
 		"deletes root": {
 			setup: func() *BinaryTree {
@@ -223,7 +223,7 @@ func TestDelete(t *testing.T) {
 				return tree
 			},
 			input:    10,
-			expected: &BinaryTree{root: &Node{value: 9, left: &Node{value: 5, right: &Node{value: 7}}, right: &Node{value: 15}}},
+			expected: &BinaryTree{root: &node{value: 9, height: 3, left: &node{value: 5, height: 2, right: &node{value: 7, height: 1}}, right: &node{value: 15, height: 1}}},
 		},
 	}
 

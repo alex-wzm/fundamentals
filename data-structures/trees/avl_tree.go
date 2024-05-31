@@ -1,63 +1,39 @@
 package trees
 
 type AVLTree struct {
-	root *AVLNode
-}
-
-type AVLNode struct {
-	value       int
-	left, right *AVLNode
-	height      int
-	// balanceFactor int // must be either -1, 0, or 1
+	root *node
 }
 
 func NewAVLTree() *AVLTree {
-
 	return &AVLTree{
 		root: nil,
 	}
 }
 
-func NewAVLNode(v int) *AVLNode {
-	return &AVLNode{
-		value:  v,
-		height: 1,
-	}
-}
-
-func height(n *AVLNode) int {
-	if n == nil {
-		return 0
-	}
-
-	return n.height
-}
-
-func (n *AVLNode) updateHeight() {
-	n.height = 1 + max(height(n.left), height(n.right))
-}
-
-func (n *AVLNode) balanceFactor() int {
+func (n *node) balanceFactor() int {
 	return height(n.left) - height(n.right)
 }
 
-func (n *AVLNode) isLeftHeavy() bool {
+func (n *node) isLeftHeavy() bool {
 	return n.balanceFactor() > 0
 }
 
-func (n *AVLNode) isRightHeavy() bool {
+func (n *node) isRightHeavy() bool {
 	return n.balanceFactor() < 0
 }
 
-func (n *AVLNode) requiresLeftRotation() bool {
+func (n *node) requiresLeftRotation() bool {
 	return n.balanceFactor() > 1
 }
 
-func (n *AVLNode) requiresRightRotation() bool {
+func (n *node) requiresRightRotation() bool {
 	return n.balanceFactor() < -1
 }
 
-func (n *AVLNode) balance() *AVLNode {
+// balance modifies the tree to satisfy the AVL balance property
+// using the four possible rotations: LL, LR, RL, RR
+// Time complexity: O(1)
+func balance(n *node) *node {
 	if n.requiresLeftRotation() {
 		if n.left.isRightHeavy() {
 			// LR case - rotate left child left before main rotation
@@ -81,7 +57,7 @@ func (n *AVLNode) balance() *AVLNode {
 }
 
 // rotateLeft is performed when a node is right-heavy
-func (x *AVLNode) rotateLeft() *AVLNode {
+func (x *node) rotateLeft() *node {
 	y := x.right
 	T2 := y.left
 
@@ -95,7 +71,7 @@ func (x *AVLNode) rotateLeft() *AVLNode {
 }
 
 // rotateRight is performed when a node is left-heavy
-func (y *AVLNode) rotateRight() *AVLNode {
+func (y *node) rotateRight() *node {
 	x := y.left
 	T2 := x.right
 
@@ -111,97 +87,35 @@ func (y *AVLNode) rotateRight() *AVLNode {
 // Insert adds a node of value v to the tree and ignores duplicates
 func (t *AVLTree) Insert(v int) {
 	if t.root == nil {
-		t.root = NewAVLNode(v)
+		t.root = newNode(v)
 
 		return
 	}
 
-	t.root = t.root.insert(v)
+	t.root = t.root.insert(v, balance)
 }
 
-// insert rebalances the tree after insertion
-func (n *AVLNode) insert(v int) *AVLNode {
-
-	if v < n.value {
-		if n.left != nil {
-			n.left = n.left.insert(v)
-		} else {
-			n.left = NewAVLNode(v)
-		}
-	}
-
-	if v > n.value {
-		if n.right != nil {
-			n.right = n.right.insert(v)
-		} else {
-			n.right = NewAVLNode(v)
-		}
-	}
-
-	n.updateHeight()
-	return n.balance()
-}
-
+// Delete removes a node of value v from the tree
 func (t *AVLTree) Delete(v int) bool {
 	if t.root == nil {
 		return false
 	}
 
-	root, deleted := t.root.delete(v)
+	root, deleted := t.root.delete(v, balance)
 
 	t.root = root
 
 	return deleted
 }
 
-func (n *AVLNode) delete(v int) (*AVLNode, bool) {
-	if n == nil {
-		return nil, false
-	}
+// Search returns whether the value v is in the tree
+func (t *AVLTree) Search(v int) bool {
+	_, exists := t.root.search(v)
 
-	var deleted bool
-
-	if v < n.value {
-		n.left, deleted = n.left.delete(v)
-	}
-
-	if v > n.value {
-		n.right, deleted = n.right.delete(v)
-	}
-
-	if v == n.value {
-		// no children
-		if n.left == nil && n.right == nil {
-			return nil, true
-		}
-
-		// left only
-		if n.left != nil && n.right == nil {
-			return n.left, true
-		}
-
-		// right only
-		if n.left == nil && n.right != nil {
-			return n.right, true
-		}
-
-		// two children
-		n.value = n.maxPredecessor()
-		n.left, deleted = n.left.delete(n.value)
-	}
-
-	n.updateHeight()
-
-	return n.balance(), deleted
-
+	return exists
 }
 
-func (n *AVLNode) maxPredecessor() int {
-	maxSoFar := n.left
-
-	for maxSoFar.right != nil {
-		maxSoFar = maxSoFar.right
-	}
-
-	return maxSoFar.value
+// Traverse returns the tree values in the specified order
+func (t *AVLTree) Traverse(method TraversalMethod) []int {
+	return t.root.traverse(method)
 }

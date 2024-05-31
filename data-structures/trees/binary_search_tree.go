@@ -1,12 +1,7 @@
 package trees
 
 type BinaryTree struct {
-	root *Node
-}
-
-type Node struct {
-	value       int
-	left, right *Node
+	root *node
 }
 
 func NewBinaryTree() *BinaryTree {
@@ -15,50 +10,53 @@ func NewBinaryTree() *BinaryTree {
 	}
 }
 
-// Insert recursively adds a node to the tree while ignoring duplicates
+// Insert recursively adds a node to the tree and ignores duplicates
 // Time complexity: O(log n) assuming a balanced tree, O(h) in the worst case
 // Space complexity: O(log n) assuming a balanced tree, O(h) in the worst case
 func (t *BinaryTree) Insert(v int) {
 	if t.root == nil {
-		t.root = &Node{value: v}
+		t.root = newNode(v)
 	}
 
-	t.root.insert(v)
+	t.root.insert(v, noop)
 }
 
-func (n *Node) insert(v int) {
+// insert does the binary search tree insertion algorithm
+// and takes a callback function to enable AVL tree balancing
+func (n *node) insert(v int, callback callback) *node {
 	if v < n.value {
 		if n.left != nil {
-			n.left.insert(v)
+			n.left.insert(v, callback)
 		} else {
-			n.left = &Node{value: v}
+			n.left = newNode(v)
 		}
-		return
 	}
 
 	if v > n.value {
 		if n.right != nil {
-			n.right.insert(v)
-			return
+			n.right.insert(v, callback)
 		} else {
-			n.right = &Node{value: v}
-			return
+			n.right = newNode(v)
 		}
 	}
+
+	n.updateHeight()
+
+	return callback(n)
 }
 
 // Search recursively searches for whether the value is in the tree
 // Time complexity: O(log n) assuming a balanced tree, O(h) in the worst case
 // Space complexity: O(log n) assuming a balanced tree, O(h) in the worst case
 func (t *BinaryTree) Search(v int) bool {
-	exists, _ := t.root.search(v)
+	_, exists := t.root.search(v)
 
 	return exists
 }
 
-func (n *Node) search(v int) (bool, *Node) {
+func (n *node) search(v int) (*node, bool) {
 	if v == n.value {
-		return true, n
+		return n, true
 	}
 
 	if v < n.value {
@@ -73,29 +71,35 @@ func (n *Node) search(v int) (bool, *Node) {
 		}
 	}
 
-	return false, nil
+	return nil, false
 }
 
-// Delete removes the target node and rearranges possible subtrees with the maximum predecessor of the target node
+// Delete removes the target node and recursively rearranges possible subtrees with the maximum predecessor of the target node
 // Time complexity: O(log n) assuming a balanced tree, O(h) in the worst case
 // Space complexity: O(log n) assuming a balanced tree, O(h) in the worst case
 func (t *BinaryTree) Delete(v int) bool {
-	root, deleted := t.root.delete(v)
+	root, deleted := t.root.delete(v, noop)
 
 	t.root = root
 
 	return deleted
 }
 
-func (n *Node) delete(v int) (*Node, bool) {
+// delete does the binary search tree deletion algorithm
+// and takes a callback function to enable AVL tree balancing
+func (n *node) delete(v int, callback callback) (*node, bool) {
+	if n == nil {
+		return nil, false
+	}
+
 	var deleted bool
 
 	if v < n.value {
-		n.left, deleted = n.left.delete(v)
+		n.left, deleted = n.left.delete(v, callback)
 	}
 
 	if v > n.value {
-		n.right, deleted = n.right.delete(v)
+		n.right, deleted = n.right.delete(v, callback)
 	}
 
 	if v == n.value {
@@ -116,14 +120,16 @@ func (n *Node) delete(v int) (*Node, bool) {
 
 		// two children
 		n.value = n.maxPredecessor()
-		n.left, deleted = n.left.delete(n.value)
+		n.left, deleted = n.left.delete(n.value, callback)
 	}
+
+	n.updateHeight()
 
 	return n, deleted
 }
 
 // maxPredecessor returns the maximum value in the left subtree
-func (n *Node) maxPredecessor() int {
+func (n *node) maxPredecessor() int {
 	maxSoFar := n.left
 
 	for maxSoFar.right != nil {
@@ -133,28 +139,26 @@ func (n *Node) maxPredecessor() int {
 	return maxSoFar.value
 }
 
-type TraversalMethod string
-
-const (
-	InOrder   TraversalMethod = "InOrder"
-	PreOrder  TraversalMethod = "PreOrder"
-	PostOrder TraversalMethod = "PostOrder"
-)
-
+// Traverse returns the values of the tree in the specified order
 func (t *BinaryTree) Traverse(method TraversalMethod) []int {
+	return t.root.traverse(method)
+}
+
+// traverse switches between the different traversal methods
+func (n *node) traverse(method TraversalMethod) []int {
 	switch method {
 	case InOrder:
-		return t.root.traverseInOrder()
+		return n.traverseInOrder()
 	case PreOrder:
-		return t.root.traversePreOrder()
+		return n.traversePreOrder()
 	case PostOrder:
-		return t.root.traversePostOrder()
+		return n.traversePostOrder()
 	default:
-		return t.root.traverseInOrder()
+		return n.traverseInOrder()
 	}
 }
 
-func (n *Node) traverseInOrder() []int {
+func (n *node) traverseInOrder() []int {
 	var values []int
 
 	if n.left != nil {
@@ -170,7 +174,7 @@ func (n *Node) traverseInOrder() []int {
 	return values
 }
 
-func (n *Node) traversePreOrder() []int {
+func (n *node) traversePreOrder() []int {
 	var values []int
 
 	values = append(values, n.value)
@@ -186,7 +190,7 @@ func (n *Node) traversePreOrder() []int {
 	return values
 }
 
-func (n *Node) traversePostOrder() []int {
+func (n *node) traversePostOrder() []int {
 	var values []int
 
 	if n.left != nil {
