@@ -3,29 +3,28 @@ package trees
 type node struct {
 	value       int
 	left, right *node
-	height      int
+	// height is used for AVL Tree balancing
+	height int
+	// black is used for Red-Black Tree balancing (nodes are red by default)
+	black bool
 }
 
 func newNode(v int) *node {
 	return &node{
 		value:  v,
 		height: 1,
+		/**
+		Idea: Consider having a separate newAVLNode function
+		so BST node heights are always 0 (i.e. it is implied that 0 height = not an AVL node)
+		**/
 	}
 }
 
-func height(n *node) int {
-	if n == nil {
-		return 0
-	}
-
-	return n.height
-}
-
-func (n *node) updateHeight() {
-	n.height = 1 + max(height(n.left), height(n.right))
-}
-
+// callback enables middleware logic for specific use cases
 type callback func(n *node) *node
+
+// modifierFn enables abstracted updates to the value of a node in-place
+type modifierFn func(n *node)
 
 // noop is a callback that does nothing
 func noop(n *node) *node {
@@ -39,3 +38,31 @@ const (
 	PreOrder  TraversalMethod = "PreOrder"
 	PostOrder TraversalMethod = "PostOrder"
 )
+
+// rotateLeft is performed when a node is right-heavy
+func (x *node) rotateLeft(modifierFn modifierFn) *node {
+	y := x.right
+	T2 := y.left
+
+	y.left = x
+	x.right = T2
+
+	modifierFn(x)
+	modifierFn(y)
+
+	return y
+}
+
+// rotateRight is performed when a node is left-heavy
+func (y *node) rotateRight(modifierFn modifierFn) *node {
+	x := y.left
+	T2 := x.right
+
+	x.right = y
+	y.left = T2
+
+	modifierFn(y)
+	modifierFn(x)
+
+	return x
+}

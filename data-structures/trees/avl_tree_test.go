@@ -8,11 +8,11 @@ import (
 
 func TestBalanceAVL(t *testing.T) {
 	testCases := map[string]struct {
-		setup    func() *AVLTree
+		setup    func() Tree
 		expected *node
 	}{
 		"already balanced tree": {
-			setup: func() *AVLTree {
+			setup: func() Tree {
 				root := &node{value: 10, height: 2}
 				root.left = &node{value: 5, height: 1}
 				root.right = &node{value: 15, height: 1}
@@ -29,7 +29,7 @@ func TestBalanceAVL(t *testing.T) {
 			},
 		},
 		"balances right-heavy tree with RR rotation": {
-			setup: func() *AVLTree {
+			setup: func() Tree {
 				root := &node{value: 10, height: 3}
 				root.right = &node{value: 20, height: 2}
 				root.right.right = &node{value: 30, height: 1}
@@ -46,7 +46,7 @@ func TestBalanceAVL(t *testing.T) {
 			},
 		},
 		"balances right-heavy tree with RL rotation": {
-			setup: func() *AVLTree {
+			setup: func() Tree {
 				root := &node{value: 10, height: 3}
 				root.right = &node{value: 30, height: 2}
 				root.right.left = &node{value: 20, height: 1}
@@ -63,7 +63,7 @@ func TestBalanceAVL(t *testing.T) {
 			},
 		},
 		"balances left-heavy tree with LL rotation": {
-			setup: func() *AVLTree {
+			setup: func() Tree {
 				root := &node{value: 30, height: 3}
 				root.left = &node{value: 20, height: 2}
 				root.left.left = &node{value: 10, height: 1}
@@ -80,7 +80,7 @@ func TestBalanceAVL(t *testing.T) {
 			},
 		},
 		"balances left-heavy tree with LR rotation": {
-			setup: func() *AVLTree {
+			setup: func() Tree {
 				root := &node{value: 30, height: 3}
 				root.left = &node{value: 10, height: 2}
 				root.left.right = &node{value: 20, height: 1}
@@ -101,7 +101,7 @@ func TestBalanceAVL(t *testing.T) {
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
 			tree := tc.setup()
-			balanced := balance(tree.root)
+			balanced := balanceByHeight(tree.(*AVLTree).root)
 
 			assert.Equal(t, tc.expected, balanced)
 		})
@@ -110,12 +110,12 @@ func TestBalanceAVL(t *testing.T) {
 
 func TestInsertAVL(t *testing.T) {
 	testCases := map[string]struct {
-		setup    func() *AVLTree
+		setup    func() Tree
 		input    int
-		expected *AVLTree
+		expected Tree
 	}{
 		"inserts to empty tree": {
-			setup: func() *AVLTree {
+			setup: func() Tree {
 				return NewAVLTree()
 			},
 			input: 10,
@@ -124,7 +124,7 @@ func TestInsertAVL(t *testing.T) {
 			},
 		},
 		"inserts smaller element": {
-			setup: func() *AVLTree {
+			setup: func() Tree {
 				tree := NewAVLTree()
 				tree.Insert(10)
 				return tree
@@ -139,7 +139,7 @@ func TestInsertAVL(t *testing.T) {
 			},
 		},
 		"inserts smaller element with rotation": {
-			setup: func() *AVLTree {
+			setup: func() Tree {
 				tree := NewAVLTree()
 				tree.Insert(10)
 				tree.Insert(5)
@@ -162,7 +162,7 @@ func TestInsertAVL(t *testing.T) {
 			},
 		},
 		"inserts larger element": {
-			setup: func() *AVLTree {
+			setup: func() Tree {
 				tree := NewAVLTree()
 				tree.Insert(10)
 				return tree
@@ -177,7 +177,7 @@ func TestInsertAVL(t *testing.T) {
 			},
 		},
 		"inserts larger element with rotation": {
-			setup: func() *AVLTree {
+			setup: func() Tree {
 				tree := NewAVLTree()
 				tree.Insert(10)
 				tree.Insert(15)
@@ -212,13 +212,13 @@ func TestInsertAVL(t *testing.T) {
 
 func TestDeleteAVL(t *testing.T) {
 	testCases := map[string]struct {
-		setup    func() *AVLTree
+		setup    func() Tree
 		input    int
 		deleted  bool
-		expected *AVLTree
+		expected Tree
 	}{
 		"deletes from empty tree": {
-			setup: func() *AVLTree {
+			setup: func() Tree {
 				return NewAVLTree()
 			},
 			input:    10,
@@ -226,7 +226,7 @@ func TestDeleteAVL(t *testing.T) {
 			expected: &AVLTree{root: nil},
 		},
 		"deletes root node": {
-			setup: func() *AVLTree {
+			setup: func() Tree {
 				tree := NewAVLTree()
 				tree.Insert(10)
 				return tree
@@ -238,7 +238,7 @@ func TestDeleteAVL(t *testing.T) {
 			},
 		},
 		"deletes leaf node": {
-			setup: func() *AVLTree {
+			setup: func() Tree {
 				tree := NewAVLTree()
 				tree.Insert(10)
 				tree.Insert(5)
@@ -254,7 +254,7 @@ func TestDeleteAVL(t *testing.T) {
 			},
 		},
 		"deletes node with left child only": {
-			setup: func() *AVLTree {
+			setup: func() Tree {
 				tree := NewAVLTree()
 				tree.Insert(10)
 				tree.Insert(5)
@@ -270,7 +270,7 @@ func TestDeleteAVL(t *testing.T) {
 			},
 		},
 		"deletes node with right child only": {
-			setup: func() *AVLTree {
+			setup: func() Tree {
 				tree := NewAVLTree()
 				tree.Insert(10)
 				tree.Insert(15)
@@ -286,7 +286,7 @@ func TestDeleteAVL(t *testing.T) {
 			},
 		},
 		"deletes node with two children and deep left subtree": {
-			setup: func() *AVLTree {
+			setup: func() Tree {
 				tree := NewAVLTree()
 				tree.Insert(30)
 				tree.Insert(20)
@@ -332,7 +332,7 @@ func TestDeleteAVL(t *testing.T) {
 			},
 		},
 		"deletes non-existant node": {
-			setup: func() *AVLTree {
+			setup: func() Tree {
 				tree := NewAVLTree()
 				tree.Insert(10)
 				tree.Insert(5)

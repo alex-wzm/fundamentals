@@ -4,7 +4,7 @@ type BinaryTree struct {
 	root *node
 }
 
-func NewBinaryTree() *BinaryTree {
+func NewBinaryTree() Tree {
 	return &BinaryTree{
 		root: nil,
 	}
@@ -39,8 +39,6 @@ func (n *node) insert(v int, callback callback) *node {
 			n.right = newNode(v)
 		}
 	}
-
-	n.updateHeight()
 
 	return callback(n)
 }
@@ -123,9 +121,7 @@ func (n *node) delete(v int, callback callback) (*node, bool) {
 		n.left, deleted = n.left.delete(n.value, callback)
 	}
 
-	n.updateHeight()
-
-	return n, deleted
+	return callback(n), deleted
 }
 
 // maxPredecessor returns the maximum value in the left subtree
